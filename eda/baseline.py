@@ -127,4 +127,4 @@ evaluation_public.loc[evaluation_public.regMonth == 3, 'forecastVolum'] = evalua
 evaluation_public.loc[evaluation_public.regMonth == 4, 'forecastVolum'] = evaluation_public.loc[(evaluation_public.regYear == 2018) & (evaluation_public.regMonth == 3), 'forecastVolum'].values / m3
 
 
-evaluation_public[['id', 'forecastVolum']].round().astype(int).to_csv('rule_submit.csv', index=False)
+evaluation_public[['id', 'forecastVolum']].round().astype(int).to_csv('../data/submit/rule_submit.csv', index=False)
