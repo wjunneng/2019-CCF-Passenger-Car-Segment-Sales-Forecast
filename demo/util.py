@@ -175,7 +175,8 @@ def preprocessing(save=True, **param):
         X_valid = reduce_mem_usage(pd.read_hdf(path_or_buf=DefaultConfig.X_valid_cache_path, key='X_valid', mode='r'))
         y_train = reduce_mem_usage(pd.read_hdf(path_or_buf=DefaultConfig.y_train_cache_path, key='y_train', mode='r'))
         y_valid = reduce_mem_usage(pd.read_hdf(path_or_buf=DefaultConfig.y_valid_cache_path, key='y_valid', mode='r'))
-        X_test_id = reduce_mem_usage(pd.read_hdf(path_or_buf=DefaultConfig.X_test_id_cache_path, key='X_test_id', mode='r'))
+        X_test_id = reduce_mem_usage(
+            pd.read_hdf(path_or_buf=DefaultConfig.X_test_id_cache_path, key='X_test_id', mode='r'))
         X_test = reduce_mem_usage(pd.read_hdf(path_or_buf=DefaultConfig.X_test_cache_path, key='X_test', mode='r'))
 
     else:
@@ -217,7 +218,7 @@ def preprocessing(save=True, **param):
         X = X.iloc[:train_sales_search.shape[0], :]
 
         del X['popularity']
-        # 学习popularity
+        # # 学习popularity
         # columns = list(X.columns)
         # columns.remove('popularity')
         # columns.remove('salesVolume')
@@ -237,20 +238,20 @@ def preprocessing(save=True, **param):
 
         X, y = X[columns], np.log1p(X['salesVolume'])
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.1, random_state=23)
-        y_train = pd.DataFrame(y_train, index=None)
-        y_valid = pd.DataFrame(y_valid, index=None)
 
         if save:
             X_train.to_hdf(DefaultConfig.X_train_cache_path, key='X_train', mode='w')
             X_valid.to_hdf(DefaultConfig.X_valid_cache_path, key='X_valid', mode='w')
-            y_train.to_hdf(DefaultConfig.y_train_cache_path, key='y_train', mode='w')
-            y_valid.to_hdf(DefaultConfig.y_valid_cache_path, key='y_valid', mode='w')
+            pd.DataFrame(y_train, index=None).to_hdf(DefaultConfig.y_train_cache_path, key='y_train', mode='w')
+            pd.DataFrame(y_valid, index=None).to_hdf(DefaultConfig.y_valid_cache_path, key='y_valid', mode='w')
             pd.DataFrame(X_test_id).to_hdf(DefaultConfig.X_test_id_cache_path, key='X_test_id', mode='w')
             X_test.to_hdf(DefaultConfig.X_test_cache_path, key='X_test', mode='w')
 
     X_train.reset_index(drop=True, inplace=True)
     X_valid.reset_index(drop=True, inplace=True)
     X_test.reset_index(drop=True, inplace=True)
+    y_train.reset_index(drop=True, inplace=True)
+    y_valid.reset_index(drop=True, inplace=True)
 
     return X_train, X_valid, y_train, y_valid, X_test_id, X_test[list(X_train.columns)]
 
@@ -346,7 +347,7 @@ def xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
     # ########################################### n_estimators  ############################################
     min_merror = np.inf
-    for n_estimators in range(10, 100, 10):
+    for n_estimators in range(10, 1000, 10):
         params['n_estimators'] = n_estimators
         cv_results = xgb.cv(params, dtrain, nfold=3, num_boost_round=1000, early_stopping_rounds=30, feval=rmspe_xg,
                             seed=23)
@@ -361,7 +362,7 @@ def xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     # ########################################### max_depth & min_child_weight #############################
     min_merror = np.inf
     for max_depth in range(6, 11, 1):
-        for min_child_weight in range(1, 6, 1):
+        for min_child_weight in range(4, 10, 1):
             params['max_depth'] = max_depth
             params['min_child_weight'] = min_child_weight
             cv_results = xgb.cv(params, dtrain, nfold=3, num_boost_round=1000, early_stopping_rounds=50, feval=rmspe_xg,
@@ -444,20 +445,24 @@ def xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
     params["learning_rate"] = xgb_best_params["learning_rate"]
 
-    bst_params = {"objective": params['objective'],
-                  "booster": params['booster'],
-                  "eta": 0.3,
-                  "max_depth": params['max_depth'],
-                  'min_child_weight': params['min_child_weight'],
-                  "subsample": params['subsample'],
-                  "colsample_bytree": params['colsample_bytree'],
-                  "reg_alpha": params['reg_alpha'],
-                  "silent": 1,
-                  "seed": 2019,
-                  "gpu_id": params['gpu_id'],
-                  "max_bin": params['max_bin'],
-                  "tree_method": params['tree_method']
-                  }
+    print(params)
+    bst_params = {
+        "eta": 0.3,
+        "alpha": 1,
+        "silent": 1,
+        "seed": 42,
+        "objective": params['objective'],
+        "booster": params['booster'],
+        "max_depth": params['max_depth'],
+        'min_child_weight': params['min_child_weight'],
+        "subsample": params['subsample'],
+        "colsample_bytree": params['colsample_bytree'],
+        "reg_alpha": params['reg_alpha'],
+        "gpu_id": params['gpu_id'],
+        "max_bin": params['max_bin'],
+        "tree_method": params['tree_method'],
+        "n_estimators": params['n_estimators']
+    }
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
     xgb_model = xgb.train(bst_params, dtrain, num_boost_round=1000, evals=watchlist, early_stopping_rounds=100,
@@ -639,13 +644,104 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     print('RMSPE: {:.6f}'.format(error))
     lgb_test_prod = lgb_model.predict(X_test)
     lgb_test_prod = np.expm1(lgb_test_prod)
-    sub_df = sub_df = pd.DataFrame(data=list(X_test_id), columns=['id'])
+    sub_df = pd.DataFrame(data=list(X_test_id), columns=['id'])
     sub_df["forecastVolum"] = [int(i) for i in lgb_test_prod]
     sub_df.to_csv(DefaultConfig.project_path + "/data/submit/" + DefaultConfig.select_model + "_submission.csv",
-                  index=False,
-                  encoding='utf-8')
+                  index=False, encoding='utf-8')
 
     # test_prod = 0.1 * xgb_test_prod + 0.9 * lgb_test_prod
     # sub_df = pd.DataFrame({"id": X_test_id.values})
     # sub_df["forecastVolum"] = [int(i) for i in test_prod]
     # sub_df.to_csv("xgb_lgb_submission.csv", index=False, encoding='utf-8')
+
+
+def cat_model(X_train, y_train, X_test, columns, **params):
+    """
+    catboost_model
+    :param X_train:
+    :param y_train:
+    :param X_test:
+    :param columns:
+    :param params:
+    :return:
+    """
+    import gc
+    import numpy as np
+    from sklearn.model_selection import StratifiedKFold
+    import pandas as pd
+    import catboost as cat
+    from sklearn.metrics import f1_score, log_loss, accuracy_score, roc_auc_score
+
+    def cat_f1_score(y_hat, data):
+        y_true = data.get_label()
+        y_hat = np.round(y_hat)
+        return 'f1', f1_score(y_true, y_hat), True
+
+    # 线下验证
+    oof = np.zeros((X_train.shape[0]))
+    # 线上结论
+    prediction = np.zeros((X_test.shape[0]))
+    seeds = [2255, 2266, 223344, 2019 * 2 + 1024, 332232111, 40, 96, 20, 48, 1, 80247, 8, 5, 3, 254, 54, 3434, 2424, 23,
+             222, 22222, 222223332, 222, 222, 2, 4, 32322777, 8888]
+    num_model_seed = 15
+    print('training')
+    feature_importance_df = None
+    for model_seed in range(num_model_seed):
+        print('模型', model_seed + 1, '开始训练')
+        oof_cat = np.zeros((X_train.shape[0]))
+        prediction_cat = np.zeros((X_test.shape[0]))
+        skf = StratifiedKFold(n_splits=5, random_state=seeds[model_seed], shuffle=True)
+
+        for index, (train_index, test_index) in enumerate(skf.split(X_train, y_train)):
+            print(index)
+            train_x, test_x, train_y, test_y = X_train.iloc[train_index], X_train.iloc[test_index], y_train.iloc[
+                train_index], y_train.iloc[test_index]
+            train_data = cat.Dataset(train_x, label=train_y)
+            validation_data = cat.Dataset(test_x, label=test_y)
+            gc.collect()
+            params = {
+                'learning_rate': 0.01,
+                'boosting_type': 'gbdt',
+                'objective': 'binary',
+                'feature_fraction': 0.8,
+                'bagging_fraction': 0.8,
+                'bagging_freq': 5,
+                'num_leaves': 1000,
+                'verbose': -1,
+                'max_depth': -1,
+                'seed': 42,
+            }
+            bst = cat.train(params, train_data, valid_sets=[validation_data], num_boost_round=10000,
+                            verbose_eval=1000,
+                            early_stopping_rounds=2019,
+                            feval=cat_f1_score)
+            oof_cat[test_index] += bst.predict(test_x)
+            prediction_cat += bst.predict(X_test) / 5
+            gc.collect()
+
+        oof += oof_cat / num_model_seed
+        prediction += prediction_cat / num_model_seed
+        print('logloss', log_loss(pd.get_dummies(y_train).values, oof_cat))
+        # 线下auc评分
+        print('the roc_auc_score for train:', roc_auc_score(y_train, oof_cat))
+    print('logloss', log_loss(pd.get_dummies(y_train).values, oof))
+    print('ac', roc_auc_score(y_train, oof))
+    return oof, prediction, feature_importance_df
+
+
+def merge(**params):
+    """
+    合并
+    :param params:
+    :return:
+    """
+    import pandas as pd
+
+    lgb = pd.read_csv(filepath_or_buffer=DefaultConfig.lgb_submission_path)
+    xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
+    rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
+
+    rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * lgb['forecastVolum']
+    rule['forecastVolum'] = rule['forecastVolum'].astype(int)
+
+    rule.to_csv(path_or_buf=DefaultConfig.submission_path, encoding='utf-8', index=None)

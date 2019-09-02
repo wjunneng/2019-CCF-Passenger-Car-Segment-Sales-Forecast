@@ -31,7 +31,8 @@ class DefaultConfig(object):
     # no_replace
     no_replace = False
 
-    select_model = 'xgb'
+    # 选中的模型
+    select_model = 'lgb'
 
     # cache
     X_train_cache_path = project_path + '/data/cache/X_train.h5'
@@ -40,3 +41,12 @@ class DefaultConfig(object):
     y_valid_cache_path = project_path + '/data/cache/y_valid.h5'
     X_test_id_cache_path = project_path + '/data/cache/X_test_id.h5'
     X_test_cache_path = project_path + '/data/cache/X_test.h5'
+
+    # lgb_path
+    lgb_submission_path = project_path + '/data/submit/lgb_submission.csv'
+    # xgb_path
+    xgb_submission_path = project_path + '/data/submit/xgb_submission.csv'
+    # rule_submit
+    rule_submission_path = project_path + '/data/submit/rule_submission.csv'
+    # submit
+    submission_path = project_path + '/data/submit/submission.csv'
