@@ -1,7 +1,6 @@
-from util import *
 from config import *
 import warnings
-import pandas as pd
+from util_1 import *
 
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -13,12 +12,12 @@ def main(**params):
     :param params:
     :return:
     """
-    # X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocessing()
-    #
-    # if DefaultConfig.select_model is 'xgb':
-    #     xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
-    # elif DefaultConfig.select_model is 'lgb':
-    #     lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
+    X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocessing()
+
+    if DefaultConfig.select_model is 'xgb':
+        xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
+    elif DefaultConfig.select_model is 'lgb':
+        lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
 
     merge()
 

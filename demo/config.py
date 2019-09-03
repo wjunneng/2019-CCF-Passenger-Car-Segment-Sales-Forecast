@@ -34,12 +34,16 @@ class DefaultConfig(object):
     # 选中的模型
     select_model = 'lgb'
 
+    # 单模型
+    single_model = True
+
     # cache
     X_train_cache_path = project_path + '/data/cache/X_train.h5'
     X_valid_cache_path = project_path + '/data/cache/X_valid.h5'
     y_train_cache_path = project_path + '/data/cache/y_train.h5'
     y_valid_cache_path = project_path + '/data/cache/y_valid.h5'
     X_test_id_cache_path = project_path + '/data/cache/X_test_id.h5'
+    df_model_weight_cache_path = project_path + '/data/cache/df_model_weight.h5'
     X_test_cache_path = project_path + '/data/cache/X_test.h5'
 
     # lgb_path
