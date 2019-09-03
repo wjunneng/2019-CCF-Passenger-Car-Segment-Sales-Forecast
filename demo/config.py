@@ -49,4 +49,5 @@ class DefaultConfig(object):
     # rule_submit
     rule_submission_path = project_path + '/data/submit/rule_submission.csv'
     # submit
-    submission_path = project_path + '/data/submit/submission.csv'
+    rule_lgb_submission_path = project_path + '/data/submit/rule_lgb_submission.csv'
+    rule_xgb_submission_path = project_path + '/data/submit/rule_xgb_submission.csv'

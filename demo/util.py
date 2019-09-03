@@ -655,7 +655,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     # sub_df.to_csv("xgb_lgb_submission.csv", index=False, encoding='utf-8')
 
 
-def cat_model(X_train, y_train, X_test, columns, **params):
+def cat_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     """
     catboost_model
     :param X_train:
@@ -665,68 +665,7 @@ def cat_model(X_train, y_train, X_test, columns, **params):
     :param params:
     :return:
     """
-    import gc
     import numpy as np
-    from sklearn.model_selection import StratifiedKFold
-    import pandas as pd
-    import catboost as cat
-    from sklearn.metrics import f1_score, log_loss, accuracy_score, roc_auc_score
-
-    def cat_f1_score(y_hat, data):
-        y_true = data.get_label()
-        y_hat = np.round(y_hat)
-        return 'f1', f1_score(y_true, y_hat), True
-
-    # 线下验证
-    oof = np.zeros((X_train.shape[0]))
-    # 线上结论
-    prediction = np.zeros((X_test.shape[0]))
-    seeds = [2255, 2266, 223344, 2019 * 2 + 1024, 332232111, 40, 96, 20, 48, 1, 80247, 8, 5, 3, 254, 54, 3434, 2424, 23,
-             222, 22222, 222223332, 222, 222, 2, 4, 32322777, 8888]
-    num_model_seed = 15
-    print('training')
-    feature_importance_df = None
-    for model_seed in range(num_model_seed):
-        print('模型', model_seed + 1, '开始训练')
-        oof_cat = np.zeros((X_train.shape[0]))
-        prediction_cat = np.zeros((X_test.shape[0]))
-        skf = StratifiedKFold(n_splits=5, random_state=seeds[model_seed], shuffle=True)
-
-        for index, (train_index, test_index) in enumerate(skf.split(X_train, y_train)):
-            print(index)
-            train_x, test_x, train_y, test_y = X_train.iloc[train_index], X_train.iloc[test_index], y_train.iloc[
-                train_index], y_train.iloc[test_index]
-            train_data = cat.Dataset(train_x, label=train_y)
-            validation_data = cat.Dataset(test_x, label=test_y)
-            gc.collect()
-            params = {
-                'learning_rate': 0.01,
-                'boosting_type': 'gbdt',
-                'objective': 'binary',
-                'feature_fraction': 0.8,
-                'bagging_fraction': 0.8,
-                'bagging_freq': 5,
-                'num_leaves': 1000,
-                'verbose': -1,
-                'max_depth': -1,
-                'seed': 42,
-            }
-            bst = cat.train(params, train_data, valid_sets=[validation_data], num_boost_round=10000,
-                            verbose_eval=1000,
-                            early_stopping_rounds=2019,
-                            feval=cat_f1_score)
-            oof_cat[test_index] += bst.predict(test_x)
-            prediction_cat += bst.predict(X_test) / 5
-            gc.collect()
-
-        oof += oof_cat / num_model_seed
-        prediction += prediction_cat / num_model_seed
-        print('logloss', log_loss(pd.get_dummies(y_train).values, oof_cat))
-        # 线下auc评分
-        print('the roc_auc_score for train:', roc_auc_score(y_train, oof_cat))
-    print('logloss', log_loss(pd.get_dummies(y_train).values, oof))
-    print('ac', roc_auc_score(y_train, oof))
-    return oof, prediction, feature_importance_df
 
 
 def merge(**params):
@@ -741,7 +680,12 @@ def merge(**params):
     xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.6 * rule['forecastVolum'] + 0.4 * lgb['forecastVolum']
+    rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * lgb['forecastVolum']
     rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
-    rule.to_csv(path_or_buf=DefaultConfig.submission_path, encoding='utf-8', index=None)
+    rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
+
+    # rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * xgb['forecastVolum']
+    # rule['forecastVolum'] = rule['forecastVolum'].astype(int)
+
+    # rule.to_csv(path_or_buf=DefaultConfig.rule_xgb_submission_path, encoding='utf-8', index=None)
