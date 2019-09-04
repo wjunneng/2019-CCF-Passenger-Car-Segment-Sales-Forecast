@@ -33,6 +33,7 @@ class DefaultConfig(object):
 
     # 选中的模型
     select_model = 'lgb'
+    # select_model = 'cbt'
 
     # 单模型
     single_model = True
@@ -50,8 +51,12 @@ class DefaultConfig(object):
     lgb_submission_path = project_path + '/data/submit/lgb_submission.csv'
     # xgb_path
     xgb_submission_path = project_path + '/data/submit/xgb_submission.csv'
+    # cbt_path
+    cbt_submission_path = project_path + '/data/submit/cbt_submission.csv'
+
     # rule_submit
     rule_submission_path = project_path + '/data/submit/rule_submission.csv'
+
     # submit
     rule_lgb_submission_path = project_path + '/data/submit/rule_lgb_submission.csv'
     rule_xgb_submission_path = project_path + '/data/submit/rule_xgb_submission.csv'

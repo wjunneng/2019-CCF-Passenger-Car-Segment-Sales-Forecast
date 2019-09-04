@@ -592,8 +592,9 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
-                              categorical_feature=['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month'])
+                              early_stopping_rounds=2019, feval=rmspe_lgb, verbose_eval=True,
+                              categorical_feature=['adcode', 'bodyType', 'model', 'month', 'model_adcode',
+                                                   'model_adcode_month'])
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -744,7 +745,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
         print(lgbm_params)
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True)
+                              early_stopping_rounds=2019, feval=rmspe_lgb, verbose_eval=True)
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -757,9 +758,9 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
                       index=False, encoding='utf-8')
 
 
-def cat_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
+def cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     """
-    catboost_model
+    cbt_model
     :param X_train:
     :param y_train:
     :param X_test:
@@ -768,6 +769,38 @@ def cat_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     :return:
     """
     import numpy as np
+    import pandas as pd
+    from catboost import CatBoostRegressor
+
+    cbt_params = {
+        'learning_rate': 0.01,
+        'depth': 8,
+        'l2_leaf_reg': 5.0,
+        'loss_function': 'RMSE',
+        'iterations': 800,
+        'random_seed': 2019,
+        'logging_level': 'Silent',
+        'thread_count': 10}
+
+    X_train = X_train.fillna(0)
+    X_valid = X_valid.fillna(0)
+
+    y_train = y_train.fillna(0)
+    y_valid = y_valid.fillna(0)
+    cbt_model = CatBoostRegressor(**cbt_params).fit(X=X_train, y=y_train, eval_set=(X_valid, y_valid),
+                                                    early_stopping_rounds=2000, verbose_eval=True,
+                                                    cat_features=['adcode', 'bodyType', 'model', 'month',
+                                                                  'model_adcode', 'model_adcode_month'])
+    print("Validating")
+    yhat = cbt_model.predict(X_valid)
+    error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
+    print('RMSPE: {:.6f}'.format(error))
+    cbt_test_prod = cbt_model.predict(X_test)
+    cbt_test_prod = np.expm1(cbt_test_prod)
+    sub_df = pd.DataFrame(data=list(X_test_id), columns=['id'])
+    sub_df["forecastVolum"] = [int(i) for i in cbt_test_prod]
+    sub_df.to_csv(DefaultConfig.project_path + "/data/submit/" + DefaultConfig.select_model + "_submission.csv",
+                  index=False, encoding='utf-8')
 
 
 def merge(**params):
@@ -780,9 +813,10 @@ def merge(**params):
 
     lgb = pd.read_csv(filepath_or_buffer=DefaultConfig.lgb_submission_path)
     xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
+    # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * lgb['forecastVolum']
+    rule['forecastVolum'] = 0.5 * rule['forecastVolum'] + 0.5 * lgb['forecastVolum']
     rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
@@ -791,7 +825,6 @@ def merge(**params):
     # rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     # rule.to_csv(path_or_buf=DefaultConfig.rule_xgb_submission_path, encoding='utf-8', index=None)
-
 
 # if __name__ == '__main__':
 #     preprocessing()
