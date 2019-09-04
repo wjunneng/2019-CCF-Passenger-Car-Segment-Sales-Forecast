@@ -222,6 +222,6 @@ rule = rule2.merge(rule1, on=["adcode", "model", "province", "regMonth"], how='l
     columns={'forecastVolum': 'forecastVolum2'})
 day_map = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 rule['daycount'] = rule['regMonth'].map(day_map)
-rule['forecastVolum'] = (0.5 * rule['forecastVolum2'] + 0.5 * rule['forecastVolum1']) * rule['daycount']
+rule['forecastVolum'] = (0.7 * rule['forecastVolum2'] + 0.3 * rule['forecastVolum1']) * rule['daycount']
 
 rule[['id', 'forecastVolum']].round().astype(int).to_csv('../data/submit/rule_submission.csv', index=False)
