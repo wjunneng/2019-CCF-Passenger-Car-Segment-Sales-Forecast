@@ -576,7 +576,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     if DefaultConfig.single_model:
         lgbm_params = {'task': 'train',
                        'boosting_type': 'gbdt',
-                       'objective': 'regression',
+                       'objective': 'mse',
                        'learning_rate': 0.05,
                        'num_leaves': 100,
                        'max_bin': 255,
@@ -592,7 +592,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=2019, feval=rmspe_lgb, verbose_eval=True,
+                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
                               categorical_feature=['adcode', 'bodyType', 'model', 'month', 'model_adcode',
                                                    'model_adcode_month'])
         print("Validating")
