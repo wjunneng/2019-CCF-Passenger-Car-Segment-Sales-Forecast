@@ -43,14 +43,14 @@ def rule1(train_sales):
     train_sales['2017q1_divide_2016q1'] = train_sales['quarter1_mean_2017'] / train_sales['quarter1_mean_2016']
     train_sales['2017q2_divide_2016q2'] = train_sales['quarter2_mean_2017'] / train_sales['quarter2_mean_2016']
 
-    qushim1 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.3 * \
-              train_sales['2017q1_divide_2016q1'] + 0.2 * train_sales['20171_divide_20161']
-    qushim2 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.3 * \
-              train_sales['2017q1_divide_2016q1'] + 0.2 * train_sales['20172_divide_20162']
-    qushim3 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.3 * \
-              train_sales['2017q1_divide_2016q1'] + 0.2 * train_sales['20173_divide_20163']
-    qushim4 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.3 * \
-              train_sales['2017q2_divide_2016q2'] + 0.2 * train_sales['20174_divide_20164']
+    qushim1 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.4 * \
+              train_sales['2017q1_divide_2016q1'] + 0.1 * train_sales['20171_divide_20161']
+    qushim2 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.4 * \
+              train_sales['2017q1_divide_2016q1'] + 0.1 * train_sales['20172_divide_20162']
+    qushim3 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.4 * \
+              train_sales['2017q1_divide_2016q1'] + 0.1 * train_sales['20173_divide_20163']
+    qushim4 = (0.25 * train_sales['2017y_divide_2016y_mean'] + 0.25 * train_sales['2017y_divide_2016y_mean']) + 0.4 * \
+              train_sales['2017q2_divide_2016q2'] + 0.1 * train_sales['20174_divide_20164']
 
     qushi1_v_2016 = train_sales['1_2016'].values * qushim1 * qushim1
     qushi2_v_2016 = train_sales['2_2016'].values * qushim2 * qushim2
