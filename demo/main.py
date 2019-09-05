@@ -1,6 +1,6 @@
 from config import *
 import warnings
-from util_1 import *
+from util import *
 
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")

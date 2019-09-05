@@ -212,16 +212,15 @@ def rule_2(train_sales):
     evaluation_public.loc[evaluation_public.regMonth == 4, 'forecastVolum'] = evaluation_public.loc[(
                                                                                                             evaluation_public.regYear == 2018) & (
                                                                                                             evaluation_public.regMonth == 3), 'forecastVolum'].values / m3
-
     return evaluation_public
 
 
-rule2 = rule_2(train_sales.copy())
+if __name__ == '__main__':
+    rule2 = rule_2(train_sales.copy())
+    rule = rule2.merge(rule1, on=["adcode", "model", "province", "regMonth"], how='left').rename(
+        columns={'forecastVolum': 'forecastVolum2'})
+    day_map = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+    rule['daycount'] = rule['regMonth'].map(day_map)
+    rule['forecastVolum'] = (0.65 * rule['forecastVolum2'] + 0.35 * rule['forecastVolum1']) * rule['daycount']
 
-rule = rule2.merge(rule1, on=["adcode", "model", "province", "regMonth"], how='left').rename(
-    columns={'forecastVolum': 'forecastVolum2'})
-day_map = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
-rule['daycount'] = rule['regMonth'].map(day_map)
-rule['forecastVolum'] = (0.7 * rule['forecastVolum2'] + 0.3 * rule['forecastVolum1']) * rule['daycount']
-
-rule[['id', 'forecastVolum']].round().astype(int).to_csv('../data/submit/rule_submission.csv', index=False)
+    rule[['id', 'forecastVolum']].round().astype(int).to_csv('../data/submit/rule_submission.csv', index=False)
