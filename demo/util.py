@@ -245,7 +245,7 @@ def add_feature(df, **params):
     # category_feature = ['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month']
 
     numerical_feature = ['regYear', 'regMonth', 'month']
-    category_feature = ['adcode', 'model', 'bodyType']
+    category_feature = ['adcode', 'model']
 
     features = numerical_feature + category_feature
 
@@ -623,7 +623,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
                               early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
-                              categorical_feature=['adcode', 'model', 'bodyType'])
+                              categorical_feature=['adcode', 'model'])
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -845,7 +845,7 @@ def merge(**params):
     # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * lgb['forecastVolum']
+    rule['forecastVolum'] = 0.65 * rule['forecastVolum'] + 0.35 * lgb['forecastVolum']
     rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
