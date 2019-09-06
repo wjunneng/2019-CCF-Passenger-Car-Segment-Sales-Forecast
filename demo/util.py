@@ -159,6 +159,139 @@ def reduce_mem_usage(df, verbose=True):
     return df
 
 
+def deal_id(df, **params):
+    """
+    处理id
+    :param df:
+    :param params:
+    :return:
+    """
+    df['id'] = df['id'].fillna(0).astype(int)
+
+    return df
+
+
+def deal_forecastVolum(df, **params):
+    """
+    处理forecastVolum
+    :param df:
+    :param params:
+    :return:
+    """
+    del df['forecastVolum']
+
+    return df
+
+
+def deal_bodyType(df, train_sales_data, **params):
+    """
+    处理bodyType
+    :param df:
+    :param params:
+    :return:
+    """
+    from sklearn.preprocessing import LabelEncoder
+
+    df['bodyType'] = df['model'].map(train_sales_data.drop_duplicates('model').set_index('model')['bodyType'])
+
+    # 编码
+    # for column in ['bodyType', 'model']:
+    #     df[column] = df[column].map(dict(zip(df[column].unique(), range(df[column].nunique()))))
+
+    df['model'] = LabelEncoder().fit_transform(df['model'])
+    # df['bodyType'] = LabelEncoder().fit_transform(df['bodyType'])
+
+    return df
+
+
+def deal_adcode(df, **params):
+    """
+    处理adcode
+    """
+    df['adcode'] = df['adcode'].apply(lambda x: int(str(x)[:2]))
+
+    return df
+
+
+def add_feature(df, **params):
+    """
+    添加新的feature
+    :param df:
+    :param params:
+    :return:
+    """
+    df['month'] = (df['regYear'] - 2016) * 12 + df['regMonth']
+    # shift_feat = []
+    #
+    # df['model_adcode'] = df['adcode'] + df['model']
+    # df['model_adcode_month'] = df['model_adcode'] * 100 + df['month']
+    # for i in [11]:
+    #     i = i + 1
+    #     shift_feat.append('shift_model_adcode_month_salesVolume_{0}'.format(i))
+    #     shift_feat.append('model_adcode_month_{0}'.format(i))
+    #
+    #     df['model_adcode_month_{0}'.format(i)] = df['model_adcode_month'] + i
+    #     df_last = df[~df.salesVolume.isnull()].set_index('model_adcode_month_{0}'.format(i))
+    #     df['shift_model_adcode_month_salesVolume_{0}'.format(i)] = df['model_adcode_month'].map(
+    #         df_last['salesVolume'])
+
+    # current columns: ['adcode', 'bodyType', 'id', 'model', 'province', 'regMonth', 'regYear',
+    #        'salesVolume', 'popularity', 'carCommentVolum', 'newsReplyVolum',
+    #        'month', 'model_adcode', 'model_adcode_month', 'model_adcode_month_12',
+    #        'shift_model_adcode_month_salesVolume_12']
+
+    # numerical_feature = ['regYear', 'regMonth', 'carCommentVolum', 'newsReplyVolum', 'popularity'] + shift_feat
+    # numerical_feature = ['regYear', 'regMonth'] + shift_feat
+    # category_feature = ['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month']
+
+    numerical_feature = ['regYear', 'regMonth']
+    category_feature = ['adcode', 'model']
+
+    features = numerical_feature + category_feature
+
+    return df, numerical_feature, category_feature, features
+
+
+def split_data(df, features, **params):
+    """
+    划分数据集
+    :param df:
+    :param params:
+    :return:
+    """
+    import numpy as np
+    from sklearn.model_selection import train_test_split
+
+    train_idx = (df['month'] <= 24)
+    test_idx = (df['month'] > 24)
+
+    X_train = df[train_idx][features]
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, df[train_idx]['salesVolume'], test_size=0.1,
+                                                          random_state=23)
+    y_train = np.log1p(y_train)
+    y_valid = np.log1p(y_valid)
+
+    X_test = df[test_idx]
+    X_test_id = X_test['id']
+    X_test = X_test[features]
+
+    # train_idx = (df['month'] <= 20)
+    # valid_idx = (df['month'].between(21, 24))
+    # test_idx = (df['month'] > 24)
+    #
+    # X_train = df[train_idx][features]
+    # y_train = np.log1p(df[train_idx]['salesVolume'])
+    #
+    # X_valid = df[valid_idx][features]
+    # y_valid = np.log1p(df[valid_idx]['salesVolume'])
+    #
+    # X_test = df[test_idx]
+    # X_test_id = X_test['id']
+    # X_test = X_test[features]
+
+    return X_train, y_train, X_valid, y_valid, X_test, X_test_id
+
+
 def preprocessing(save=True, **param):
     """
     合并
@@ -189,55 +322,25 @@ def preprocessing(save=True, **param):
         # ['id', 'province', 'adcode', 'model', 'regYear', 'regMonth', 'forecastVolum'] (5280, 7)
         evaluation_public = get_evaluation_public()
 
-        # 合并了sales + search
-        train_sales_search = pd.merge(train_sales_data, train_search_data,
-                                      on=['province', 'adcode', 'model', 'regYear', 'regMonth'])
+        # 合并train_sales_data与evaluation_public
+        data = pd.concat([train_sales_data, evaluation_public], axis=0, ignore_index=True)
+        # 合并data与train_search_data
+        data = data.merge(train_search_data, how='left', on=['province', 'adcode', 'model', 'regYear', 'regMonth'])
+        # 合并data与train_user_reply_data
+        data = data.merge(train_user_reply_data, how='left', on=['model', 'regYear', 'regMonth'])
 
-        # 删除特征
-        del evaluation_public['forecastVolum']
-        del evaluation_public['province']
-        del train_sales_search['province']
-        del train_sales_search['bodyType']
-
-        # 先保存id
-        X_test_id = evaluation_public['id']
-        # 后删除
-        del evaluation_public['id']
-
-        # 合并训练集和测试集
-        X = pd.concat([train_sales_search, evaluation_public], axis=0, ignore_index=True)
-
-        # 截取前两个字符
-        X['adcode'] = X['adcode'].apply(lambda x: int(str(x)[:2]))
-        # 编码
-        X['model'] = LabelEncoder().fit_transform(X['model'])
-
-        # 测试集
-        X_test = X.iloc[train_sales_search.shape[0]:, :]
-        # 训练集
-        X = X.iloc[:train_sales_search.shape[0], :]
-
-        del X['popularity']
-        # # 学习popularity
-        # columns = list(X.columns)
-        # columns.remove('popularity')
-        # columns.remove('salesVolume')
-        # X_test = semi_suprivised_learning(X[columns], X['popularity'], X_test[columns], 'popularity')
-        # X_test.reset_index(drop=True, inplace=True)
-        # for column in list(X_test.columns):
-        #     X_test[column] = X_test[column].astype(int)
-        #     X_test[column] = X_test[column].astype(int)
-        # print(X_test['popularity'].values)
-
-        if 'salesVolumne' in list(X_test.columns):
-            # 删除测试集的salesVolume列
-            del X_test['salesVolume']
-
-        columns = list(X.columns)
-        columns.remove('salesVolume')
-
-        X, y = X[columns], np.log1p(X['salesVolume'])
-        X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.1, random_state=23)
+        # 处理id
+        data = deal_id(data)
+        # 处理forecastVolum
+        data = deal_forecastVolum(data)
+        # 处理bodyType和model
+        data = deal_bodyType(data, train_sales_data)
+        # 处理adcode
+        data = deal_adcode(data)
+        # 添加新的特征
+        data, numerical_feature, category_feature, features = add_feature(data)
+        # split
+        X_train, y_train, X_valid, y_valid, X_test, X_test_id = split_data(data, features)
 
         if save:
             X_train.to_hdf(DefaultConfig.X_train_cache_path, key='X_train', mode='w')
@@ -252,6 +355,7 @@ def preprocessing(save=True, **param):
     X_test.reset_index(drop=True, inplace=True)
     y_train.reset_index(drop=True, inplace=True)
     y_valid.reset_index(drop=True, inplace=True)
+    X_test_id.reset_index(drop=True, inplace=True)
 
     return X_train, X_valid, y_train, y_valid, X_test_id, X_test[list(X_train.columns)]
 
@@ -502,7 +606,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     if DefaultConfig.single_model:
         lgbm_params = {'task': 'train',
                        'boosting_type': 'gbdt',
-                       'objective': 'mse',
+                       'objective': 'regression',
                        'learning_rate': 0.05,
                        'num_leaves': 100,
                        'max_bin': 255,
@@ -518,7 +622,8 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True)
+                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
+                              categorical_feature=['adcode', 'model'])
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -669,7 +774,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
         print(lgbm_params)
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True)
+                              early_stopping_rounds=2019, feval=rmspe_lgb, verbose_eval=True)
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -682,9 +787,9 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
                       index=False, encoding='utf-8')
 
 
-def cat_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
+def cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     """
-    catboost_model
+    cbt_model
     :param X_train:
     :param y_train:
     :param X_test:
@@ -693,6 +798,38 @@ def cat_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     :return:
     """
     import numpy as np
+    import pandas as pd
+    from catboost import CatBoostRegressor
+
+    cbt_params = {
+        'learning_rate': 0.01,
+        'depth': 8,
+        'l2_leaf_reg': 5.0,
+        'loss_function': 'RMSE',
+        'iterations': 800,
+        'random_seed': 2019,
+        'logging_level': 'Silent',
+        'thread_count': 10}
+
+    X_train = X_train.fillna(0)
+    X_valid = X_valid.fillna(0)
+
+    y_train = y_train.fillna(0)
+    y_valid = y_valid.fillna(0)
+    cbt_model = CatBoostRegressor(**cbt_params).fit(X=X_train, y=y_train, eval_set=(X_valid, y_valid),
+                                                    early_stopping_rounds=2000, verbose_eval=True,
+                                                    cat_features=['adcode', 'bodyType', 'model', 'month',
+                                                                  'model_adcode', 'model_adcode_month'])
+    print("Validating")
+    yhat = cbt_model.predict(X_valid)
+    error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
+    print('RMSPE: {:.6f}'.format(error))
+    cbt_test_prod = cbt_model.predict(X_test)
+    cbt_test_prod = np.expm1(cbt_test_prod)
+    sub_df = pd.DataFrame(data=list(X_test_id), columns=['id'])
+    sub_df["forecastVolum"] = [int(i) for i in cbt_test_prod]
+    sub_df.to_csv(DefaultConfig.project_path + "/data/submit/" + DefaultConfig.select_model + "_submission.csv",
+                  index=False, encoding='utf-8')
 
 
 def merge(**params):
@@ -704,7 +841,8 @@ def merge(**params):
     import pandas as pd
 
     lgb = pd.read_csv(filepath_or_buffer=DefaultConfig.lgb_submission_path)
-    xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
+    # xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
+    # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
     rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * lgb['forecastVolum']
@@ -716,3 +854,51 @@ def merge(**params):
     # rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     # rule.to_csv(path_or_buf=DefaultConfig.rule_xgb_submission_path, encoding='utf-8', index=None)
+
+# if __name__ == '__main__':
+#     preprocessing()
+#     import lightgbm as lgb
+#     from sklearn.metrics import mean_squared_error
+#
+#     lgb_model = lgb.LGBMRegressor(
+#         num_leaves=32, reg_alpha=1, reg_lambda=0.1, objective='mse',
+#         max_depth=-1, learning_rate=0.05, min_child_samples=5, random_state=np.random.randint(1000),
+#         n_estimators=5000, subsample=0.8, colsample_bytree=0.8, n_jobs=10
+#     )
+#
+#     lgb_model.fit(X_train, y_train, eval_set=[
+#         (X_valid, y_valid),
+#     ], categorical_feature=category_feature, early_stopping_rounds=100, verbose=100)
+#
+#     data['pred_label'] = lgb_model.predict(data[features]) * data['model_weight']
+#
+#
+#     def score(data, pred='pred_label', label='salesVolume', group='model'):
+#         data['pred_label'] = data['pred_label'].apply(lambda x: 0 if x < 0 else x).round().astype(int)
+#         data_agg = data.groupby('model').agg({
+#             pred: list,
+#             label: [list, 'mean'],
+#
+#         }).reset_index()
+#
+#         data_agg.columns = ['_'.join(col).strip() for col in data_agg.columns]
+#         nrmse_score = []
+#         for raw in data_agg[['{0}_list'.format(pred), '{0}_list'.format(label), '{0}_mean'.format(label)]].values:
+#             nrmse_score.append(
+#                 mean_squared_error(raw[0], raw[1]) ** 0.5 / raw[2]
+#             )
+#         print(1 - np.mean(nrmse_score))
+#         return 1 - np.mean(nrmse_score)
+#
+#
+#     score(data.loc[list(X_valid.index)])
+#     lgb_model.n_estimators = 666
+#
+#     lgb_model.fit(pd.concat([X_train, X_valid], ignore_index=True),
+#                   pd.concat([y_train, y_valid], ignore_index=True), categorical_feature=category_feature)
+#     data['forecastVolum'] = lgb_model.predict(data[features]) * data['model_weight']
+#     sub = pd.DataFrame(data=list(X_test_id), columns=['id'])
+#     print(data.loc[list(X_test.index)])
+#     sub['forecastVolum'] = data.loc[list(X_test.index)]['forecastVolum'].apply(
+#         lambda x: 0 if x < 0 else x).round().astype(int).reset_index(drop=True)
+#     sub.to_csv(DefaultConfig.project_path + '/data/submit/lgb_submission.csv', index=False)
