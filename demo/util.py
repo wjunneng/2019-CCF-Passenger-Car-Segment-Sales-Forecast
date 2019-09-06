@@ -199,7 +199,7 @@ def deal_bodyType(df, train_sales_data, **params):
     #     df[column] = df[column].map(dict(zip(df[column].unique(), range(df[column].nunique()))))
 
     df['model'] = LabelEncoder().fit_transform(df['model'])
-    # df['bodyType'] = LabelEncoder().fit_transform(df['bodyType'])
+    df['bodyType'] = LabelEncoder().fit_transform(df['bodyType'])
 
     return df
 
@@ -245,7 +245,7 @@ def add_feature(df, **params):
     # category_feature = ['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month']
 
     numerical_feature = ['regYear', 'regMonth', 'month']
-    category_feature = ['adcode', 'model']
+    category_feature = ['adcode', 'model', 'bodyType']
 
     features = numerical_feature + category_feature
 
@@ -623,7 +623,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
                               early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
-                              categorical_feature=['adcode', 'model'])
+                              categorical_feature=['adcode', 'model', 'bodyType'])
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
