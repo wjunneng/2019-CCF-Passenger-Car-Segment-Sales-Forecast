@@ -244,7 +244,7 @@ def add_feature(df, **params):
     # numerical_feature = ['regYear', 'regMonth'] + shift_feat
     # category_feature = ['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month']
 
-    numerical_feature = ['regYear', 'regMonth']
+    numerical_feature = ['regYear', 'regMonth', 'month']
     category_feature = ['adcode', 'model']
 
     features = numerical_feature + category_feature
