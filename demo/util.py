@@ -841,7 +841,7 @@ def merge(**params):
     # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.6 * rule['forecastVolum'] + 0.4 * lgb['forecastVolum']
+    rule['forecastVolum'] = 0.5 * rule['forecastVolum'] + 0.5 * lgb['forecastVolum']
     rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
