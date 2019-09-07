@@ -221,10 +221,10 @@ def add_feature(df, **params):
     :return:
     """
     df['month'] = (df['regYear'] - 2016) * 12 + df['regMonth']
+
+    df['bodyType_model'] = df['bodyType'] * 100 + df['model']
+
     # shift_feat = []
-    #
-    # df['model_adcode'] = df['adcode'] + df['model']
-    # df['model_adcode_month'] = df['model_adcode'] * 100 + df['month']
     # for i in [11]:
     #     i = i + 1
     #     shift_feat.append('shift_model_adcode_month_salesVolume_{0}'.format(i))
@@ -240,12 +240,8 @@ def add_feature(df, **params):
     #        'month', 'model_adcode', 'model_adcode_month', 'model_adcode_month_12',
     #        'shift_model_adcode_month_salesVolume_12']
 
-    # numerical_feature = ['regYear', 'regMonth', 'carCommentVolum', 'newsReplyVolum', 'popularity'] + shift_feat
-    # numerical_feature = ['regYear', 'regMonth'] + shift_feat
-    # category_feature = ['adcode', 'bodyType', 'model', 'month', 'model_adcode', 'model_adcode_month']
-
-    numerical_feature = ['regYear', 'regMonth', 'month']
-    category_feature = ['adcode', 'model']
+    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode']
+    category_feature = ['model']
 
     features = numerical_feature + category_feature
 
@@ -623,7 +619,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
                               early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
-                              categorical_feature=['adcode', 'model'])
+                              categorical_feature=['model'])
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
@@ -845,7 +841,7 @@ def merge(**params):
     # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.65 * rule['forecastVolum'] + 0.35 * lgb['forecastVolum']
+    rule['forecastVolum'] = 0.6 * rule['forecastVolum'] + 0.4 * lgb['forecastVolum']
     rule['forecastVolum'] = rule['forecastVolum'].astype(int)
 
     rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
