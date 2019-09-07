@@ -835,16 +835,27 @@ def merge(**params):
     :return:
     """
     import pandas as pd
+    import numpy as np
 
     lgb = pd.read_csv(filepath_or_buffer=DefaultConfig.lgb_submission_path)
-    # xgb = pd.read_csv(filepath_or_buffer=DefaultConfig.xgb_submission_path)
-    # cbt = pd.read_csv(filepath_or_buffer=DefaultConfig.cbt_submission_path)
     rule = pd.read_csv(filepath_or_buffer=DefaultConfig.rule_submission_path)
 
-    rule['forecastVolum'] = 0.5 * rule['forecastVolum'] + 0.5 * lgb['forecastVolum']
-    rule['forecastVolum'] = rule['forecastVolum'].astype(int)
+    submission = pd.read_csv(filepath_or_buffer=DefaultConfig.submission_path)
 
-    rule.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
+    tmp = np.inf
+    result = None
+    for coefficient in np.arange(0.55, 0.6, 0.01):
+        rule['forecastVolum'] = coefficient * rule['forecastVolum'] + (1 - coefficient) * lgb['forecastVolum']
+        rule['forecastVolum'] = rule['forecastVolum'].astype(int)
+
+        current = abs(rule['forecastVolum'] - submission['forecastVolum']).sum()
+        if tmp > current:
+            tmp = current
+            result = rule.copy()
+
+            print('coefficient: ', coefficient)
+            print('差距： ', current)
+    result.to_csv(path_or_buf=DefaultConfig.rule_lgb_submission_path, encoding='utf-8', index=None)
 
     # rule['forecastVolum'] = 0.7 * rule['forecastVolum'] + 0.3 * xgb['forecastVolum']
     # rule['forecastVolum'] = rule['forecastVolum'].astype(int)

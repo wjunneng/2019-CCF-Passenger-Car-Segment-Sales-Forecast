@@ -12,14 +12,14 @@ def main(**params):
     :param params:
     :return:
     """
-    # X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocessing()
-    #
-    # if DefaultConfig.select_model is 'xgb':
-    #     xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
-    # elif DefaultConfig.select_model is 'lgb':
-    #     lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
-    # elif DefaultConfig.select_model is 'cbt':
-    #     cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
+    X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocessing()
+
+    if DefaultConfig.select_model is 'xgb':
+        xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
+    elif DefaultConfig.select_model is 'lgb':
+        lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
+    elif DefaultConfig.select_model is 'cbt':
+        cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
 
     merge()
 
