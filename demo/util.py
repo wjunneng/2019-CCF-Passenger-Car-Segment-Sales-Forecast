@@ -220,10 +220,31 @@ def add_feature(df, **params):
     :param params:
     :return:
     """
-    df['month'] = (df['regYear'] - 2016) * 12 + df['regMonth']
+    import datetime
 
+    # 一、
+    df['month'] = (df['regYear'] - 2016) * 12 + df['regMonth']
+    df['date'] = df['regYear'].astype(str) + '-' + df['regMonth'].astype(str)
+    df['date'] = df['date'].apply(
+        lambda x: datetime.datetime(year=int(x.split('-')[0]), month=int(x.split('-')[1]), day=1))
+
+    # 二、效果不好
+    df['dayofweek'] = df['date'].dt.dayofweek
+    del df['date']
+
+    # 三、效果不好
     df['bodyType_model'] = df['bodyType'] * 100 + df['model']
 
+    # 四、
+    for column_i in ['model']:
+        # 数值列
+        for column_j in ['popularity']:
+            stats = df.groupby(column_i)[column_j].agg(['mean', 'max', 'min', 'std', 'sum'])
+            stats.columns = ['mean_' + column_j, 'max_' + column_j, 'min_' + column_j, 'std_' + column_j,
+                             'sum_' + column_j]
+            df = df.merge(stats, left_on=column_i, right_index=True, how='left')
+
+    print(list(df.columns))
     # shift_feat = []
     # for i in [11]:
     #     i = i + 1
@@ -240,7 +261,8 @@ def add_feature(df, **params):
     #        'month', 'model_adcode', 'model_adcode_month', 'model_adcode_month_12',
     #        'shift_model_adcode_month_salesVolume_12']
 
-    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode']
+    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'mean_popularity', 'max_popularity',
+                         'min_popularity', 'std_popularity', 'sum_popularity']
     category_feature = ['model']
 
     features = numerical_feature + category_feature
