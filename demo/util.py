@@ -232,13 +232,13 @@ def add_feature(df, **params):
     df['dayofweek'] = df['date'].dt.dayofweek
     del df['date']
 
-    # 三、效果不好
+    # 三、效果不好 毒特征
     df['bodyType_model'] = df['bodyType'] * 100 + df['model']
 
     # 四、
     for column_i in ['model']:
         # 数值列
-        for column_j in ['popularity']:
+        for column_j in ['popularity', 'carCommentVolum', 'newsReplyVolum']:
             stats = df.groupby(column_i)[column_j].agg(['mean', 'max', 'min', 'std', 'sum'])
             stats.columns = ['mean_' + column_j, 'max_' + column_j, 'min_' + column_j, 'std_' + column_j,
                              'sum_' + column_j]
@@ -261,8 +261,13 @@ def add_feature(df, **params):
     #        'month', 'model_adcode', 'model_adcode_month', 'model_adcode_month_12',
     #        'shift_model_adcode_month_salesVolume_12']
 
-    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'mean_popularity', 'max_popularity',
-                         'min_popularity', 'std_popularity', 'sum_popularity']
+    # numerical_feature = ['regYear', 'regMonth', 'month', 'adcode',
+    #                      'mean_popularity', 'max_popularity', 'min_popularity', 'std_popularity', 'sum_popularity',
+    #                      'mean_carCommentVolum', 'max_carCommentVolum', 'min_carCommentVolum', 'std_carCommentVolum',
+    #                      'sum_carCommentVolum',
+    #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
+    #                      'sum_newsReplyVolum']
+    numerical_feature = ['adcode', 'regMonth', 'month', 'regYear', 'max_popularity']
     category_feature = ['model']
 
     features = numerical_feature + category_feature
@@ -617,6 +622,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     import pandas as pd
     import numpy as np
     import lightgbm as lgb
+    from matplotlib import pyplot as plt
 
     dtrain = lgb.Dataset(X_train, label=y_train)
     dvalid = lgb.Dataset(X_valid, label=y_valid)
@@ -642,6 +648,23 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
                               valid_names=['eval', 'train'],
                               early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
                               categorical_feature=['model'])
+
+        fold_importance_df = pd.DataFrame()
+        fold_importance_df["feature"] = list(X_train.columns)
+        fold_importance_df["importance"] = lgb_model.feature_importance(importance_type='split',
+                                                                        iteration=lgb_model.best_iteration)
+
+        if fold_importance_df is not None:
+            plt.figure(figsize=(8, 8))
+
+            print(list(
+                fold_importance_df.groupby(['feature'])['importance'].agg('mean').sort_values(ascending=False).index))
+
+            # 5折数据取平均值
+            fold_importance_df.groupby(['feature'])['importance'].agg('mean').sort_values(ascending=False).head(
+                40).plot.barh()
+            plt.show()
+
         print("Validating")
         yhat = lgb_model.predict(X_valid)
         error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))
