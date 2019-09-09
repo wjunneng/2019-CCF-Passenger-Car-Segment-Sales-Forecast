@@ -281,8 +281,8 @@ def add_feature(df, **params):
     #                      'sum_carCommentVolum',
     #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
     #                      'sum_newsReplyVolum']
-    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model']
-    category_feature = ['model']
+    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model', 'model']
+    category_feature = []
 
     features = numerical_feature + category_feature
 
@@ -660,8 +660,7 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
-                              categorical_feature=['model'])
+                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True)
 
         fold_importance_df = pd.DataFrame()
         fold_importance_df["feature"] = list(X_train.columns)
