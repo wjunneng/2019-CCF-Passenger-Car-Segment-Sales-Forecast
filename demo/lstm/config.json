@@ -1,14 +1,15 @@
 {
 	"data": {
-		"filename": "data.csv",
+		"filename_train": "X_train.csv",
+		"filename_test": "X_test.csv",
 		"columns": [
+			"salesVolume",
 			"adcode",
 			"bodyType",
-			"model",
-			"salesVolume"
+			"model"
 		],
 		"sequence_length": 50,
-		"train_test_split": 0.8571428571428571,
+		"train_test_split": 1.0,
 		"normalise": true
 	},
 	"training": {

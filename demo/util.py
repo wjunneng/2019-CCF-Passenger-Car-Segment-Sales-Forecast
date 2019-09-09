@@ -220,6 +220,7 @@ def add_feature(df, **params):
     :param params:
     :return:
     """
+    from sklearn import preprocessing
     import datetime
 
     # 一、
@@ -244,7 +245,20 @@ def add_feature(df, **params):
                              'sum_' + column_j]
             df = df.merge(stats, left_on=column_i, right_index=True, how='left')
 
-    print(list(df.columns))
+    df['adcode_model'] = df['adcode'] *100 + df['model']
+
+    # ################################################################### yeo-johnson 变换
+    # columns = ['mean_popularity', 'max_popularity', 'min_popularity', 'std_popularity', 'sum_popularity',
+    #            'mean_carCommentVolum', 'max_carCommentVolum', 'min_carCommentVolum', 'std_carCommentVolum',
+    #            'sum_carCommentVolum',
+    #            'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
+    #            'sum_newsReplyVolum']
+    #
+    # print('进行yeo-johnson变换的特征列：')
+    # pt = preprocessing.PowerTransformer(method='yeo-johnson', standardize=True)
+    # df[columns] = pt.fit_transform(df[columns])
+    #
+    # print(list(df.columns))
     # shift_feat = []
     # for i in [11]:
     #     i = i + 1
@@ -267,7 +281,7 @@ def add_feature(df, **params):
     #                      'sum_carCommentVolum',
     #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
     #                      'sum_newsReplyVolum']
-    numerical_feature = ['adcode', 'regMonth', 'month', 'regYear', 'max_popularity']
+    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model']
     category_feature = ['model']
 
     features = numerical_feature + category_feature
@@ -315,7 +329,7 @@ def split_data(df, features, **params):
     return X_train, y_train, X_valid, y_valid, X_test, X_test_id
 
 
-def preprocessing(save=True, **param):
+def preprocess(save=True, **param):
     """
     合并
     :param param:
@@ -859,8 +873,7 @@ def cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
     y_valid = y_valid.fillna(0)
     cbt_model = CatBoostRegressor(**cbt_params).fit(X=X_train, y=y_train, eval_set=(X_valid, y_valid),
                                                     early_stopping_rounds=2000, verbose_eval=True,
-                                                    cat_features=['adcode', 'bodyType', 'model', 'month',
-                                                                  'model_adcode', 'model_adcode_month'])
+                                                    cat_features=['model', 'bodyType', 'dayofweek'])
     print("Validating")
     yhat = cbt_model.predict(X_valid)
     error = rmspe(np.expm1(y_valid.values), np.expm1(yhat))

@@ -35,18 +35,18 @@ def main():
         os.makedirs(configs['model']['save_dir'])
 
     data = DataLoader(
-        os.path.join('data', configs['data']['filename']),
-        configs['data']['train_test_split'],
+        os.path.join('data', configs['data']['filename_train']),
+        os.path.join('data', configs['data']['filename_test']),
         configs['data']['columns']
     )
 
     model = Model()
     model.build_model(configs)
 
-    # x, y = data.get_train_data(
-    #     seq_len=configs['data']['sequence_length'],
-    #     normalise=configs['data']['normalise']
-    # )
+    x, y = data.get_train_data(
+        seq_len=configs['data']['sequence_length'],
+        normalise=configs['data']['normalise']
+    )
     # in-memory training
     # model.train(
     #     x,
@@ -56,20 +56,24 @@ def main():
     #     save_dir=configs['model']['save_dir']
     # )
 
+    # ##################################################### train...
     # out-of memory generative training
-    steps_per_epoch = math.ceil(
-        (data.len_train - configs['data']['sequence_length']) / configs['training']['batch_size'])
-    model.train_generator(
-        data_gen=data.generate_train_batch(
-            seq_len=configs['data']['sequence_length'],
-            batch_size=configs['training']['batch_size'],
-            normalise=configs['data']['normalise']
-        ),
-        epochs=configs['training']['epochs'],
-        batch_size=configs['training']['batch_size'],
-        steps_per_epoch=steps_per_epoch,
-        save_dir=configs['model']['save_dir']
-    )
+    # steps_per_epoch = math.ceil(
+    #     (data.len_train - configs['data']['sequence_length']) / configs['training']['batch_size'])
+    # model.train_generator(
+    #     data_gen=data.generate_train_batch(
+    #         seq_len=configs['data']['sequence_length'],
+    #         batch_size=configs['training']['batch_size'],
+    #         normalise=configs['data']['normalise']
+    #     ),
+    #     epochs=configs['training']['epochs'],
+    #     batch_size=configs['training']['batch_size'],
+    #     steps_per_epoch=steps_per_epoch,
+    #     save_dir=configs['model']['save_dir']
+    # )
+
+    model = model.load_model(
+        '/home/wjunneng/Ubuntu/2019-CCF-Passenger-Car-Segment-Sales-Forecast/demo/lstm/saved_models/09092019-144342-e2.h5')
 
     x_test, y_test = data.get_test_data(
         seq_len=configs['data']['sequence_length'],
@@ -77,21 +81,23 @@ def main():
     )
 
     # 多序列预测
-    predictions = model.predict_sequences_multiple(x_test, configs['data']['sequence_length'],
-                                                   configs['data']['sequence_length'])
-
-    print(predictions)
-    # 绘图
+    # predictions = model.predict_sequences_multiple(x_test, configs['data']['sequence_length'],
+    #                                                configs['data']['sequence_length'])
+    #
+    # print(predictions)
+    # # 绘图
     # plot_results_multiple(predictions, y_test, configs['data']['sequence_length'])
 
-    # 全序列预测
+    # # 全序列预测
     # predictions = model.predict_sequence_full(x_test, configs['data']['sequence_length'])
-    # 绘图
+    # print(predictions)
+    # # 绘图
     # plot_results(predictions, y_test)
 
     # 逐点预测
-    # predictions = model.predict_point_by_point(x_test)
-    # # 绘图
+    # 绘图
+    predictions = model.predict_point_by_point(x_test)
+    print(predictions)
     # plot_results(predictions, y_test)
 
 

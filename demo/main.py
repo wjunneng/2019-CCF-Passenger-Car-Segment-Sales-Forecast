@@ -12,7 +12,7 @@ def main(**params):
     :param params:
     :return:
     """
-    X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocessing()
+    X_train, X_valid, y_train, y_valid, X_test_id, X_test = preprocess()
 
     if DefaultConfig.select_model is 'xgb':
         xgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)

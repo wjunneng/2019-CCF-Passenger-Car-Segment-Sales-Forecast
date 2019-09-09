@@ -6,11 +6,13 @@ import pandas as pd
 class DataLoader():
     """A class for loading and transforming data for the lstm model"""
 
-    def __init__(self, filename, split, cols):
-        dataframe = pd.read_csv(filename)
-        i_split = int(len(dataframe) * split)
-        self.data_train = dataframe.get(cols).values[:i_split]
-        self.data_test = dataframe.get(cols).values[i_split:]
+    def __init__(self, filename_train, filename_test, cols):
+        dataframe_train = pd.read_csv(filename_train)
+        dataframe_test = pd.read_csv(filename_test)
+
+        self.data_train = dataframe_train.get(cols).values
+        self.data_test = dataframe_test.get(cols).values
+
         self.len_train = len(self.data_train)
         self.len_test = len(self.data_test)
         self.len_train_windows = None
