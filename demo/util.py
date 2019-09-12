@@ -234,7 +234,7 @@ def add_feature(df, **params):
     del df['date']
 
     # 三、效果不好 毒特征
-    df['bodyType_model'] = df['bodyType'] * 100 + df['model']
+    df['adcode_bodyType'] = df['adcode'] * 100 + df['bodyType']
 
     # 四、
     for column_i in ['model']:
@@ -245,7 +245,8 @@ def add_feature(df, **params):
                              'sum_' + column_j]
             df = df.merge(stats, left_on=column_i, right_index=True, how='left')
 
-    df['adcode_model'] = df['adcode'] *100 + df['model']
+    df['adcode_model'] = df['adcode'] * 100 + df['model']
+    df['model_adcode'] = df['model'] * 100 + df['adcode']
 
     # ################################################################### yeo-johnson 变换
     # columns = ['mean_popularity', 'max_popularity', 'min_popularity', 'std_popularity', 'sum_popularity',
@@ -281,8 +282,10 @@ def add_feature(df, **params):
     #                      'sum_carCommentVolum',
     #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
     #                      'sum_newsReplyVolum']
-    numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model', 'model']
-    category_feature = []
+    # numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model']
+    numerical_feature = ['adcode_model', 'adcode', 'month', 'regMonth', 'regYear']
+    # model 不变
+    category_feature = ['model']
 
     features = numerical_feature + category_feature
 
@@ -660,7 +663,8 @@ def lgb_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test):
 
         lgb_model = lgb.train(lgbm_params, dtrain, num_boost_round=30000, valid_sets=[dvalid, dtrain],
                               valid_names=['eval', 'train'],
-                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True)
+                              early_stopping_rounds=50, feval=rmspe_lgb, verbose_eval=True,
+                              categorical_feature=['model'])
 
         fold_importance_df = pd.DataFrame()
         fold_importance_df["feature"] = list(X_train.columns)

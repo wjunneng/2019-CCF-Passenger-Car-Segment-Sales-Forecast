@@ -48,13 +48,13 @@ def main():
         normalise=configs['data']['normalise']
     )
     # in-memory training
-    # model.train(
-    #     x,
-    #     y,
-    #     epochs=configs['training']['epochs'],
-    #     batch_size=configs['training']['batch_size'],
-    #     save_dir=configs['model']['save_dir']
-    # )
+    model.train(
+        x,
+        y,
+        epochs=configs['training']['epochs'],
+        batch_size=configs['training']['batch_size'],
+        save_dir=configs['model']['save_dir']
+    )
 
     # ##################################################### train...
     # out-of memory generative training
@@ -72,8 +72,8 @@ def main():
     #     save_dir=configs['model']['save_dir']
     # )
 
-    model = model.load_model(
-        '/home/wjunneng/Ubuntu/2019-CCF-Passenger-Car-Segment-Sales-Forecast/demo/lstm/saved_models/09092019-144342-e2.h5')
+    # model = model.load_model(
+    #     '/home/wjunneng/Ubuntu/2019-CCF-Passenger-Car-Segment-Sales-Forecast/demo/lstm/saved_models/09092019-144342-e2.h5')
 
     x_test, y_test = data.get_test_data(
         seq_len=configs['data']['sequence_length'],

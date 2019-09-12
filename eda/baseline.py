@@ -135,6 +135,8 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 5), 'salesVolume'].values
     m16_1_6 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 1), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 6), 'salesVolume'].values
+    m16_1_7 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 1), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 7), 'salesVolume'].values
 
     m16_2_3 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 2), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 3), 'salesVolume'].values
@@ -146,6 +148,8 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 6), 'salesVolume'].values
     m16_2_7 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 2), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 7), 'salesVolume'].values
+    m16_2_8 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 2), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 8), 'salesVolume'].values
 
     m16_3_4 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 3), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 4), 'salesVolume'].values
@@ -157,6 +161,8 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 7), 'salesVolume'].values
     m16_3_8 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 3), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 8), 'salesVolume'].values
+    m16_3_9 = train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 3), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2016) & (train_sales.regMonth == 9), 'salesVolume'].values
 
     m17_1_2 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 1), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 2), 'salesVolume'].values
@@ -168,6 +174,8 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 5), 'salesVolume'].values
     m17_1_6 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 1), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 6), 'salesVolume'].values
+    m17_1_7 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 1), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 7), 'salesVolume'].values
 
     m17_2_3 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 2), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 3), 'salesVolume'].values
@@ -179,6 +187,8 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 6), 'salesVolume'].values
     m17_2_7 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 2), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 7), 'salesVolume'].values
+    m17_2_8 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 2), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 8), 'salesVolume'].values
 
     m17_3_4 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 3), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 4), 'salesVolume'].values
@@ -190,14 +200,16 @@ def rule_2(train_sales):
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 7), 'salesVolume'].values
     m17_3_8 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 3), 'salesVolume'].values / \
               train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 8), 'salesVolume'].values
+    m17_3_9 = train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 3), 'salesVolume'].values / \
+              train_sales.loc[(train_sales.regYear == 2017) & (train_sales.regMonth == 9), 'salesVolume'].values
 
-    m16_1 = m16_1_2 / 2 + m16_1_3 / 4 + m16_1_4 / 8 + m16_1_5 / 16 + m16_1_6 / 16
-    m16_2 = m16_2_3 / 2 + m16_2_4 / 4 + m16_2_5 / 8 + m16_2_6 / 16 + m16_2_7 / 16
-    m16_3 = m16_3_4 / 2 + m16_3_5 / 4 + m16_3_6 / 8 + m16_3_7 / 16 + m16_3_8 / 16
+    m16_1 = m16_1_2 / 2 + m16_1_3 / 4 + m16_1_4 / 8 + m16_1_5 / 16 + m16_1_6 / 32 + m16_1_7 / 32
+    m16_2 = m16_2_3 / 2 + m16_2_4 / 4 + m16_2_5 / 8 + m16_2_6 / 16 + m16_2_7 / 32 + m16_2_8 / 32
+    m16_3 = m16_3_4 / 2 + m16_3_5 / 4 + m16_3_6 / 8 + m16_3_7 / 16 + m16_3_8 / 32 + m16_3_9 / 32
 
-    m17_1 = m17_1_2 / 2 + m17_1_3 / 4 + m17_1_4 / 8 + m17_1_5 / 16 + m17_1_6 / 16
-    m17_2 = m17_2_3 / 2 + m17_2_4 / 4 + m17_2_5 / 8 + m17_2_6 / 16 + m17_2_7 / 16
-    m17_3 = m17_3_4 / 2 + m17_3_5 / 4 + m17_3_6 / 8 + m17_3_7 / 16 + m17_3_8 / 16
+    m17_1 = m17_1_2 / 2 + m17_1_3 / 4 + m17_1_4 / 8 + m17_1_5 / 16 + m17_1_6 / 32 + m17_1_7 / 32
+    m17_2 = m17_2_3 / 2 + m17_2_4 / 4 + m17_2_5 / 8 + m17_2_6 / 16 + m17_2_7 / 32 + m17_2_8 / 32
+    m17_3 = m17_3_4 / 2 + m17_3_5 / 4 + m17_3_6 / 8 + m17_3_7 / 16 + m17_3_8 / 32 + m17_3_9 / 32
 
     m1 = m16_1 * 0.4 + m17_1 * 0.6
     m2 = m16_2 * 0.4 + m17_2 * 0.6
