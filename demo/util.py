@@ -283,7 +283,7 @@ def add_feature(df, **params):
     #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
     #                      'sum_newsReplyVolum']
     # numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model']
-    numerical_feature = ['adcode_model', 'adcode', 'month', 'regMonth', 'regYear']
+    numerical_feature = ['adcode_model', 'month', 'adcode', 'regMonth', 'regYear']
     # model 不变
     category_feature = ['model']
 
@@ -302,12 +302,16 @@ def split_data(df, features, **params):
     import numpy as np
     from sklearn.model_selection import train_test_split
 
-    train_idx = (df['month'] <= 24)
+    train_idx = (df['month'] <= 20)
+    valid_idx = (df['month'].between(21, 24))
     test_idx = (df['month'] > 24)
 
     X_train = df[train_idx][features]
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, df[train_idx]['salesVolume'], test_size=0.1,
-                                                          random_state=23)
+    y_train = df[train_idx]['salesVolume']
+
+    X_valid = df[valid_idx][features]
+    y_valid = df[valid_idx]['salesVolume']
+
     y_train = np.log1p(y_train)
     y_valid = np.log1p(y_valid)
 
