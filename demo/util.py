@@ -283,7 +283,7 @@ def add_feature(df, **params):
     #                      'mean_newsReplyVolum', 'max_newsReplyVolum', 'min_newsReplyVolum', 'std_newsReplyVolum',
     #                      'sum_newsReplyVolum']
     # numerical_feature = ['regYear', 'regMonth', 'month', 'adcode', 'adcode_model']
-    numerical_feature = ['adcode_model', 'month', 'adcode', 'regMonth', 'regYear']
+    numerical_feature = ['adcode_model', 'month', 'adcode', 'regMonth', 'dayofweek', 'regYear']
     # model 不变
     category_feature = ['model']
 
