@@ -21,7 +21,8 @@ def main(**params):
     elif DefaultConfig.select_model is 'cbt':
         cbt_model(X_train, X_valid, y_train, y_valid, X_test_id, X_test)
 
-    merge()
+    elif DefaultConfig.select_model is 'merge':
+        merge()
 
 
 if __name__ == '__main__':

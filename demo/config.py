@@ -32,8 +32,9 @@ class DefaultConfig(object):
     no_replace = False
 
     # 选中的模型
-    select_model = 'lgb'
+    # select_model = 'lgb'
     # select_model = 'cbt'
+    select_model = 'merge'
 
     # 单模型
     single_model = True
